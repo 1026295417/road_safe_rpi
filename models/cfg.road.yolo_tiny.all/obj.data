@@ -1,0 +1,5 @@
+classes= 11
+train  = /home/digits/works/YOLO.projects/cfg.road.yolo_tiny.all/train.txt
+valid  = /home/digits/works/YOLO.projects/cfg.road.yolo_tiny.all/test.txt
+names = /home/digits/works/YOLO.projects/cfg.road.yolo_tiny.all/obj.names
+backup = /home/digits/works/YOLO.projects/cfg.road.yolo_tiny.all/weights/

@@ -321,9 +321,11 @@ def process_local_web(img_org_data, img_big_data, img_prv_data):
 
 def new_imgname(gps_status):
     if(gps_status is True):
-        filename = "{}_{}_{}_{}.jpg".format(gps_lati,gps_long,gps_dmy,gps_hms)
+        d, m, y = gps_dmy[0:2], gps_dmy[2:4], gps_dmy[4:6]
+        h, mm, s = gps_hms[0:2], gps_hms[2:4], gps_hms[4:6]
+        filename = "{}_{}_{}_{}_{}_{}_{}_{}_{}.jpg".format(car_id,gps_lati,gps_long,y,m,d,h,mm,s)
     else:
-        filename = "{}_{}_{}_{}.jpg".format('no','gps','device',time.time())
+        filename = "{}_{}_{}_{}_{}.jpg".format(car_id,'no','gps','device',time.time())
 
     return filename
 
@@ -370,7 +372,7 @@ if __name__ == '__main__':
     #upload_img(interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval))
 
     print("Upload img status:", proc_upload)
-    gpsDevice = GPS(comport=comPort, portrate=baudRate, test=True)
+    gpsDevice = GPS(comport=comPort, portrate=baudRate, test=False)
     last_gps_logging = time.time()
 
     CAMERA = webCam(id=cam_id, videofile=simulate, size=webcam_size)

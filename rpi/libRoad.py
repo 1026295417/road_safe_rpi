@@ -6,10 +6,10 @@ import serial
 import socket  # Import socket module
 
 class objDetect_ssd:
-    def __init__(self, objnames, model_path, pbtxt_path, img_size=(300,300)):
+    def __init__(self, objnames, model_path, pbtxt_path, img_size=(300,300), score=0.5):
         self.objnames = objnames
         #detect
-        self.score = 0.3
+        self.score = score
         self.nms = 0.5
         #bounding box
         self.bbox_show = True  #display on image
@@ -294,6 +294,7 @@ class GPS:
                 self.hardware = False
         else:
             self.ser = None
+            self.hardware = True
             
         self.portrate = portrate
         self.ddmmyy = ''

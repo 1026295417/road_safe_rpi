@@ -64,6 +64,7 @@ defect_info_write = os.path.join(web_path,"defects.log")
 interval_detect = cfg.getint("detect", "interval_detect")  #frames
 full_screen = cfg.getboolean("screen", "full_screen")
 same_gps_no_uload = cfg.getboolean("detect", "same_gps_no_uload")
+detect_score = cfg.getint("detect", "score")/100
 
 #upload
 #flash_disk_folder = cfg.get("client_server", "flash_disk_folder")
@@ -87,7 +88,7 @@ reference_size = (cfg.getint("developer", "reference_size_w"), cfg.getint("devel
 dmodel = objDetect_ssd(objnames="../models/cfg.road.yolo_tiny.all/obj.names", \
     model_path="../models/ssd_mobilenet.all/frozen_inference_graph.pb", \
     pbtxt_path="../models/ssd_mobilenet.all/frozen_all_road.pbtxt", \
-    img_size=(300,300))
+    img_size=(300,300), score=detect_score)
 
 '''
 dmodel = obDetect_yolo(objnames="../models/cfg.road.yolo_tiny.all/obj.names", \
@@ -126,7 +127,11 @@ def setEnv():
 
 def check_env(conn_data):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex((upload_host, upload_port))
+    try:
+        result = sock.connect_ex((upload_host, upload_port))
+    except:
+        result = 1
+
     if(result == 0):
         connect_server_status = True
     else:
@@ -144,7 +149,7 @@ def check_env(conn_data):
     else:
         print("[FAILED] Image upload to {}:{}".format(upload_host, upload_port))
         
-    if(gpsDevice.gpsStatus is True):
+    if(gpsDevice.hardware is True):
         print("[OK] GPS device status.")
     else:
         print("[FAILED] GPS device status.")
@@ -383,7 +388,7 @@ if __name__ == '__main__':
     #upload_img(interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval))
     
     #print("Upload img status:", proc_upload)
-    gpsDevice = GPS(comport=comPort, portrate=baudRate, test=True)
+    gpsDevice = GPS(comport=comPort, portrate=baudRate, test=False)
     last_gps_logging = time.time()
     
     CAMERA = webCam(id=cam_id, videofile=simulate, size=webcam_size)
@@ -413,9 +418,7 @@ if __name__ == '__main__':
             last_gps_logging = time.time()
 
         hasFrame, _ , frame_org = CAMERA.getFrame(rotate=cam_rotate, vflip=flip_vertical, hflip=flip_horizontal, resize=None)
-        #frame_inference[0:int(frame_inference.shape[0]/2), 0:frame_inference.shape[1]] = (0,0,0)
         frameID += 1
-        #cv2.imshow("TEST", frame_inference)
         if(hasFrame is False):
             print("No frame comming from webcam.")
             exit_app()
@@ -423,7 +426,7 @@ if __name__ == '__main__':
         frame_screen = cv2.resize(frame_org, screen_size, interpolation=cv2.INTER_CUBIC)
         frame_inference = frame_screen.copy()
         frame_inference[0:int(frame_screen.shape[0]/5), 0: frame_screen.shape[1]] = (0,0,0)
-        cv2.imshow("TEST", frame_inference)
+        #cv2.imshow("TEST", frame_inference)
         web_defect_txt = ""
         
         if(len(simulate)<3 or ((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati))):

@@ -134,31 +134,34 @@ def check_env(conn_data):
 
     if(result == 0):
         connect_server_status = True
+        print("[READY] {}:{} ok".format(upload_host, upload_port))
     else:
         connect_server_status = False
+        print("[FAILED] {}:{} error".format(upload_host, upload_port))
 
-    print("TEST 1-->", result)
+    #print("TEST 1-->", result)
     (host, port, recv_bit, interval) = conn_data
     imgUP = SOCKETSEND(host, port, recv_bit, interval)
     imgUP.connect()
-    print("TEST 2-->", result)
+    #print("TEST 2-->", result)
     send_status = imgUP.send_file("test_upload.jpg", "test_upload.jpg" )
-    print("TEST 3-->", result)
+    #print("TEST 3-->", result)
     if(send_status is True):
-        print("[OK] Image upload to {}:{}".format(upload_host, upload_port))
+        print("[READY] Image upload to {}:{}".format(upload_host, upload_port))
     else:
         print("[FAILED] Image upload to {}:{}".format(upload_host, upload_port))
         
     if(gpsDevice.hardware is True):
-        print("[OK] GPS device status.")
+        print("[READY] GPS device status.")
     else:
         print("[FAILED] GPS device status.")
-        
+        exit_app(poweroff=False)
     if(CAMERA.working() is True):
-        print("[OK] Web camera device.")
+        print("[READY] Web camera device.")
     else:
         print("[FAILED] Web camera device.")
-        
+        exit_app(poweroff=False)
+
     return (send_status, gpsDevice.gpsStatus, CAMERA.working())
 
 def mouseClick(event,x,y,flags,param):

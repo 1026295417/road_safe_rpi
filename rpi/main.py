@@ -21,7 +21,7 @@ from configparser import ConfigParser
 import multiprocessing as mp
 from libRoad import SOCKETSEND
 import glob
-
+import socket
 defect_list = { 'D00': '縱向裂縫輪痕', 'D01': '縱向裂縫施工', 'D10': '橫向裂縫間隔', 'D11': '橫向裂縫施工', \
     'D12': '縱橫裂縫', 'D20': '龜裂', 'D21': '人孔破損', 'D30': '車轍', 'D31': '路面隆起', \
     'D40': '坑洞', 'D41': '人孔高差', 'D42': '薄層剝離', 'D50': '人孔缺失', 'D51': '正常人孔' }
@@ -91,7 +91,7 @@ dmodel = objDetect_ssd(objnames="../models/cfg.road.yolo_tiny.all/obj.names", \
 
 '''
 dmodel = obDetect_yolo(objnames="../models/cfg.road.yolo_tiny.all/obj.names", \
-    weights="../models/cfg.road.yolo_tiny.all/yolov3-tiny_500000.weights", \
+    weights="../models/cfg.road.yolo_tiny.all/yolov3-tiny_11_classes.weights", \
     cfg="../models/cfg.road.yolo_tiny.all/yolov3-tiny.cfg", \
     img_size=reference_size )
 '''
@@ -101,7 +101,7 @@ dmodel = obDetect_yolo(objnames="../models/cfg.road.yolo_tiny.all/obj.names", \
 reference_size_ratio = (reference_size[0]/webcam_size[0],reference_size[1]/webcam_size[1] )
 
 def setEnv():
-    if len(simulate)>0 and (not os.path.exists(simulate)):
+    if len(simulate)>2 and (not os.path.exists(simulate)):
         print("No such video file:", simulate)
         sys.exit()
 
@@ -125,14 +125,24 @@ def setEnv():
         cv2.setWindowProperty(win_name, cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
 
 def check_env(conn_data):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex((upload_host, upload_port))
+    if(result == 0):
+        connect_server_status = True
+    else:
+        connect_server_status = False
+
+    print("TEST 1-->", result)
     (host, port, recv_bit, interval) = conn_data
     imgUP = SOCKETSEND(host, port, recv_bit, interval)
     imgUP.connect()
+    print("TEST 2-->", result)
     send_status = imgUP.send_file("test_upload.jpg", "test_upload.jpg" )
+    print("TEST 3-->", result)
     if(send_status is True):
-        print("[OK] Image upload to taifo.bim-group.com")
+        print("[OK] Image upload to {}:{}".format(upload_host, upload_port))
     else:
-        print("[FAILED] Image upload to taifo.bim-group.com")
+        print("[FAILED] Image upload to {}:{}".format(upload_host, upload_port))
         
     if(gpsDevice.gpsStatus is True):
         print("[OK] GPS device status.")
@@ -364,23 +374,26 @@ if __name__ == '__main__':
     logo = cv2.imread("img/logo.png")
     btn_poweroff = cv2.imread("img/poweroff.png")
 
+    
     #multi-process
     pool_result = []
     pool_saveimg = mp.Pool(processes = 2)
     pool_uploadimg = mp.Pool(processes = 1)
-    proc_upload = pool_uploadimg.apply_async(upload_img, (interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval), ))
+    #proc_upload = pool_uploadimg.apply_async(upload_img, (interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval), ))
     #upload_img(interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval))
-
-    print("Upload img status:", proc_upload)
-    gpsDevice = GPS(comport=comPort, portrate=baudRate, test=False)
+    
+    #print("Upload img status:", proc_upload)
+    gpsDevice = GPS(comport=comPort, portrate=baudRate, test=True)
     last_gps_logging = time.time()
-
+    
     CAMERA = webCam(id=cam_id, videofile=simulate, size=webcam_size)
+    
     if(CAMERA.working() is False):
         print("webcam cannot work.")
         appStatus = False
         sys.exit()
 
+    
     defect_file = new_log_filename()
     logDefects = recordDefects(os.path.join(log_folder, defect_file), defect_count)
     #f = open(defect_info_write, "a")  # for web
@@ -392,27 +405,28 @@ if __name__ == '__main__':
     while appStatus:
         gpsDevice.updateGPS()
         (gps_status, gps_lati, gps_long, gps_dmy, gps_hms) = gpsDevice.getGMinfo()
-            
+        
         if(time.time() - last_gps_logging > interval_gps_upload):
             f = open("gps_tracking.txt","w")
             f.write("{},{},{},{},{},{}".format("GPS_TRACKS", car_id, gps_lati, gps_long, gps_dmy, gps_hms))
             f.close()
             last_gps_logging = time.time()
 
-        hasFrame, frame_inference, frame_org = CAMERA.getFrame(rotate=cam_rotate, vflip=flip_vertical, hflip=flip_horizontal, resize=None)
+        hasFrame, _ , frame_org = CAMERA.getFrame(rotate=cam_rotate, vflip=flip_vertical, hflip=flip_horizontal, resize=None)
         #frame_inference[0:int(frame_inference.shape[0]/2), 0:frame_inference.shape[1]] = (0,0,0)
         frameID += 1
         #cv2.imshow("TEST", frame_inference)
         if(hasFrame is False):
+            print("No frame comming from webcam.")
             exit_app()
 
         frame_screen = cv2.resize(frame_org, screen_size, interpolation=cv2.INTER_CUBIC)
         frame_inference = frame_screen.copy()
-        frame_inference[0:int(frame_screen.shape[0]/4), 0: frame_screen.shape[1]] = (255,255,255)
-        #cv2.imshow("TEST", frame_inference)
+        frame_inference[0:int(frame_screen.shape[0]/5), 0: frame_screen.shape[1]] = (0,0,0)
+        cv2.imshow("TEST", frame_inference)
         web_defect_txt = ""
         
-        if((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati)):
+        if(len(simulate)<3 or ((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati))):
         #if((frameID % interval_detect==0)):
             last_long, last_lati = gps_long, gps_lati
             

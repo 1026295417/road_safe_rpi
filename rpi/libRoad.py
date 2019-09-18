@@ -95,7 +95,8 @@ class obDetect_yolo:
         self.inpHeight = img_size[1]
 
         dnn = cv2.dnn.readNetFromDarknet(cfg, weights)
-        #dnn.setPreferableTarget(cv2.dnn.DNN_TARGET_MYRIAD)
+        #dnn.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+        dnn.setPreferableTarget(cv2.dnn.DNN_TARGET_MYRIAD)
         self.net = dnn
 
     # Get the names of the output layers
@@ -106,7 +107,7 @@ class obDetect_yolo:
         return [layersNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
     def getObject(self, frame, labelWant):
-        print("YOLO DETECT.")
+        #print("YOLO DETECT.")
         frameHeight = frame.shape[0]
         frameWidth = frame.shape[1]
 
@@ -114,7 +115,6 @@ class obDetect_yolo:
         labelName = []
         confidences = []
         boxes = []
-
         blob = cv2.dnn.blobFromImage(frame, 1/255, (self.inpWidth, self.inpHeight), [0,0,0], 1, crop=False)
         # Sets the input to the network
         net = self.net
@@ -128,7 +128,8 @@ class obDetect_yolo:
                 classId = np.argmax(scores)
                 confidence = scores[classId]
                 label = self.classes[classId]
-                if( (labelWant=="" or (label in labelWant)) and (confidence > self.score) ):
+                print(label, confidence, classId, scores)
+                if( confidence > self.score) :
                     center_x = int(detection[0] * frameWidth)
                     center_y = int(detection[1] * frameHeight)
                     width = int(detection[2] * frameWidth)
@@ -171,7 +172,7 @@ class webCam:
         self.last_frames = 0
         self.fps = 0
 
-        if(len(videofile)>0):
+        if(len(videofile)>3):
             self.cam = cv2.VideoCapture(videofile)
             self.playvideo = True
         else:

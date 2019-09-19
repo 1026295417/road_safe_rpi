@@ -109,8 +109,8 @@ def setEnv():
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
 
-    if(os.path.isfile("count_upload.txt")):
-        os.remove("count_upload.txt")
+    #if(os.path.isfile("count_upload.txt")):
+    #    os.remove("count_upload.txt")
 
     if not os.path.exists(img_waiting_path):
         os.makedirs(img_waiting_path)
@@ -125,6 +125,14 @@ def setEnv():
         cv2.namedWindow(win_name, cv2.WND_PROP_FULLSCREEN)        # Create a named window
         cv2.setWindowProperty(win_name, cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
 
+    list_of_files = glob.glob(os.path.join(img_waiting_path,'*.jpg'))
+    img_waiting = len(list_of_files)
+    write_counts(img_waiting, 0, 0)
+    #f = open("count_upload.txt","w")
+    #f.write("{},{},{}".format(0, img_waiting, 0))
+    #f.close()
+
+
 def check_env(conn_data):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -138,6 +146,7 @@ def check_env(conn_data):
     else:
         connect_server_status = False
         print("[FAILED] {}:{} error".format(upload_host, upload_port))
+        exit_app(poweroff=False)
 
     #print("TEST 1-->", result)
     (host, port, recv_bit, interval) = conn_data
@@ -150,7 +159,7 @@ def check_env(conn_data):
         print("[READY] Image upload to {}:{}".format(upload_host, upload_port))
     else:
         print("[FAILED] Image upload to {}:{}".format(upload_host, upload_port))
-        
+        exit_app(poweroff=False)
     if(gpsDevice.hardware is True):
         print("[READY] GPS device status.")
     else:
@@ -163,6 +172,11 @@ def check_env(conn_data):
         exit_app(poweroff=False)
 
     return (send_status, gpsDevice.gpsStatus, CAMERA.working())
+
+def write_counts(tt,uu,ff):
+    f = open("count_upload.txt","w")
+    f.write("{},{},{}".format(tt, uu, ff))
+    f.close()
 
 def mouseClick(event,x,y,flags,param):
     if event == 4:
@@ -225,15 +239,16 @@ def desktop_bg():
     img_desktop = printText(gpsDevice.localtime, img_desktop, color=(0,255,255,0), size=1.05, pos=(380,35), type="Chinese")
 
     return img_desktop
-    
+
 def upload_img(interval_gps, waiting_path, uploaded_path, conn_data):
 
     gps_upload_time = time.time()
     (host, port, recv_bit, interval) = conn_data
     imgUP = SOCKETSEND(host, port, recv_bit, interval)
     print("Starting upload process.....", waiting_path, conn_data)
-    id = 0
-    waiting = 0
+    count_upload = 0
+    count_upload_failed = 0
+    img_waiting = 0
     
     while True:
     
@@ -251,10 +266,10 @@ def upload_img(interval_gps, waiting_path, uploaded_path, conn_data):
         else:
             list_of_files = glob.glob(os.path.join(waiting_path,'*.jpg'))
             img_waiting = len(list_of_files)
-            #print("waitting:", img_waiting)
+            #print("wait:", img_waiting, "error:", count_upload_failed)
             
             if(img_waiting>0):
-                print("File counts:", len(list_of_files))
+                print("File counts:", img_waiting)
                 file = max(list_of_files, key=os.path.getctime)
                 img_filename = os.path.basename(file)
                 filename, file_extension = os.path.splitext(img_filename)
@@ -266,8 +281,10 @@ def upload_img(interval_gps, waiting_path, uploaded_path, conn_data):
                     send_status = imgUP.send_file(img_filename, os.path.join(waiting_path,img_filename) )
                     
                     if(send_status is True):
-                        id += 1
-                        waiting -= 1
+                        count_upload += 1
+                        img_waiting -= 1
+                        if(img_waiting<0): img_waiting=0
+
                         try:
                             os.rename(os.path.join(waiting_path,img_filename), os.path.join(uploaded_path,img_filename))
                             print("uploaded, remove it from detected folder", file)
@@ -276,11 +293,11 @@ def upload_img(interval_gps, waiting_path, uploaded_path, conn_data):
                             print("uploaded, but move file to uploaded folder failed, delete it.")
                             os.remove(os.path.join(waiting_path,img_filename))
                             pass
-                            
-                        f = open("count_upload.txt","w")
-                        f.write("{},{}".format(id, waiting))
-                        f.close()
-        
+                    else:
+                        count_upload_failed += 1
+
+                    write_counts(count_upload, img_waiting, count_upload_failed)
+
 def save_img_waiting(uploaded_path, img_org_data, img_prv_data):
 
     rtn = False
@@ -293,6 +310,7 @@ def save_img_waiting(uploaded_path, img_org_data, img_prv_data):
         cv2.imwrite(path_org, img_org)
         #os.rename(path_org, uploaded_path)
         cv2.imwrite(path_prv, img_prv)
+        print("writed image to waitting ")
         rtn = True
 
     except:
@@ -432,19 +450,30 @@ if __name__ == '__main__':
         frame_inference[0:int(frame_screen.shape[0]/5), 0: frame_screen.shape[1]] = (0,0,0)
         #cv2.imshow("TEST", frame_inference)
         web_defect_txt = ""
-        
-        if(len(simulate)<3 or ((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati))):
+
+        #check upload counts
+        if(os.path.isfile("count_upload.txt")):
+            try:
+                fcount = open("count_upload.txt", "r")
+                [count_upload, count_waiting, count_upload_failed] = fcount.readline().split(",")
+                fcount.close()
+            except:
+                print("Read count_upload.txt error.")
+
+
+        if(len(simulate)==1 or ((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati))):
         #if((frameID % interval_detect==0)):
             last_long, last_lati = gps_long, gps_lati
             
             #check upload counts
-            if(os.path.isfile("count_upload.txt")):
-                try:
-                    fcount = open("count_upload.txt", "r")
-                    [count_upload, count_waiting] = fcount.readline().split(",")
-                    fcount.close()
-                except:
-                    print("Read count_upload.txt error.")
+            #if(os.path.isfile("count_upload.txt")):
+            #    try:
+            #        fcount = open("count_upload.txt", "r")
+            #        [count_upload, count_waiting, count_upload_failed] = \
+            #            fcount.readline().split(",")
+            #        fcount.close()
+            #    except:
+            #        print("Read count_upload.txt error.")
             
             #-put labels to frame------------------
             nBoxes = []

@@ -237,7 +237,7 @@ def upload_img(interval_gps, waiting_path, uploaded_path, conn_data):
     
     while True:
     
-        if(time.time() - gps_upload_time > interval_gps ):
+        if(time.time() - gps_upload_time > interval_gps_upload ):
             gps_upload_time = time.time()
             if(os.path.isfile("gps_tracking.txt")):
                 fgps = open("gps_tracking.txt", "r")
@@ -250,9 +250,10 @@ def upload_img(interval_gps, waiting_path, uploaded_path, conn_data):
             
         else:
             list_of_files = glob.glob(os.path.join(waiting_path,'*.jpg'))
-            waiting = len(list_of_files)
+            img_waiting = len(list_of_files)
+            #print("waitting:", img_waiting)
             
-            if(len(list_of_files)>0):
+            if(img_waiting>0):
                 print("File counts:", len(list_of_files))
                 file = max(list_of_files, key=os.path.getctime)
                 img_filename = os.path.basename(file)
@@ -387,7 +388,7 @@ if __name__ == '__main__':
     pool_result = []
     pool_saveimg = mp.Pool(processes = 2)
     pool_uploadimg = mp.Pool(processes = 1)
-    #proc_upload = pool_uploadimg.apply_async(upload_img, (interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval), ))
+    proc_upload = pool_uploadimg.apply_async(upload_img, (interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval), ))
     #upload_img(interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval))
     
     #print("Upload img status:", proc_upload)

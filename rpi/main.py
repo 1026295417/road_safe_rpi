@@ -15,7 +15,7 @@ from libRoad import obDetect_yolo
 from libRoad import objDetect_ssd
 from PIL import ImageFont, ImageDraw, Image
 import multiprocessing as mp
-from easygui import ynbox
+from easygui import ynbox, choicebox
 from subprocess import call
 from configparser import ConfigParser
 import multiprocessing as mp
@@ -181,13 +181,13 @@ def check_env(conn_data):
         msg += "{}. 攝影機:{} 無法使用.\n".format(msg_id, cam_id)
         #exit_app(poweroff=False)
 
-    if(len(msg)>0):
-        msg = msg + "\n 環境檢查有問題, 您要繼續執行嗎?\n    (程式有可能會失敗無法執行)"
+    #if(len(msg)>0):
+    #    msg = msg + "\n 環境檢查有問題, 您要繼續執行嗎?\n    (程式有可能會失敗無法執行)"
 
-    if(ynbox(msg, "環境檢查") is False):
-        exit_app(poweroff=False)
+    #if(ynbox(msg, "環境檢查") is False):
+    #    exit_app(poweroff=False)
 
-    return (send_status, gpsDevice.gpsStatus, CAMERA.working())
+    return (send_status, gpsDevice.gpsStatus, CAMERA.working(), msg)
 
 def write_counts(tt,uu,ff):
     f = open("count_upload.txt","w")
@@ -376,7 +376,7 @@ def new_imgname(gps_status):
     if(gps_status is True):
         d, m, y = gps_dmy[0:2], gps_dmy[2:4], gps_dmy[4:6]
         h, mm, s = gps_hms[0:2], gps_hms[2:4], gps_hms[4:6]
-        filename = "{}_{}_{}_{}_{}_{}_{}_{}_{}.jpg".format(car_id,gps_lati,gps_long,y,m,d,h,mm,s)
+        filename = "{}_{}_{}_20{}_{}_{}_{}_{}_{}.jpg".format(car_id,gps_lati,gps_long,y,m,d,h,mm,s)
     else:
         filename = "{}_{}_{}_{}_{}.jpg".format(car_id,'no','gps','device',time.time())
 
@@ -391,16 +391,22 @@ def exit_app(poweroff=False):
     pool_uploadimg.join()
 
     logDefects.close()
-    #f.close()
     print("End.....")
-    #sys.exit(0)
-    os.system("taskkill /f /im Python.exe")
-    os.system("taskkill /f /im ROAD-safe.exe")
+    #os.system("taskkill /f /im Python.exe")
+    #os.system("taskkill /f /im ROAD-safe.exe")
     
     if(poweroff is False):
         sys.exit(0)
     else:
         call("sudo poweroff", shell=True)
+
+def chk_env_actions(choice):
+    if(choice=='3'):
+        exit_app(poweroff=False)
+    elif(choice=='4'):
+        os.system('reboot')
+    elif(choice=='5'):
+        exit_app(poweroff=True)
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
@@ -443,8 +449,20 @@ if __name__ == '__main__':
 
     last_long, last_lati = 00, 0.0
     count_waiting, count_upload = 0, 0
-    (s_upload, s_gps, s_cam) = check_env((upload_host, upload_port, recv_bit, upload_interval))
-    
+    (s_upload, s_gps, s_cam, msg) = check_env((upload_host, \
+        upload_port, recv_bit, upload_interval))
+    if(len(msg)>0):
+        choices = ["1) re-scan", "2) continue", "3) exit ap", "4) reboot", "5) poweroff"]
+        ans = choicebox(msg, title='環境檢查', choices=choices)
+        print("ans=", ans[0])
+        chk_env_actions(ans[0])
+        print("ans=", ans[0])
+        while ans[0] == '1':
+            (s_upload, s_gps, s_cam, msg) = check_env((upload_host, \
+                upload_port, recv_bit, upload_interval))
+            ans = choicebox(msg, title='環境檢查', choices=choices)
+            chk_env_actions(ans[0])
+
     while appStatus:
         gpsDevice.updateGPS()
         (gps_status, gps_lati, gps_long, gps_dmy, gps_hms) = gpsDevice.getGMinfo()

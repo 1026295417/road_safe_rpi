@@ -134,6 +134,8 @@ def setEnv():
 
 
 def check_env(conn_data):
+    msg = ""
+    msg_id = 0
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         result = sock.connect_ex((upload_host, upload_port))
@@ -146,7 +148,9 @@ def check_env(conn_data):
     else:
         connect_server_status = False
         print("[FAILED] {}:{} error".format(upload_host, upload_port))
-        exit_app(poweroff=False)
+        msg_id += 1
+        msg += "{}. 無法連上主機 {}:{}\n".format(msg_id, upload_host, upload_port)
+        #exit_app(poweroff=False)
 
     #print("TEST 1-->", result)
     (host, port, recv_bit, interval) = conn_data
@@ -159,16 +163,28 @@ def check_env(conn_data):
         print("[READY] Image upload to {}:{}".format(upload_host, upload_port))
     else:
         print("[FAILED] Image upload to {}:{}".format(upload_host, upload_port))
-        exit_app(poweroff=False)
+        msg_id += 1
+        msg += "{}. 測試圖片上傳到主機 {}:{} 失敗.\n".format(msg_id, upload_host, upload_port)
+        #exit_app(poweroff=False)
     if(gpsDevice.hardware is True):
         print("[READY] GPS device status.")
     else:
         print("[FAILED] GPS device status.")
-        exit_app(poweroff=False)
+        msg_id += 1
+        msg += "{}. GPS:{} 設備讀取失敗.\n".format(msg_id, comPort)
+        #exit_app(poweroff=False)
     if(CAMERA.working() is True):
         print("[READY] Web camera device.")
     else:
         print("[FAILED] Web camera device.")
+        msg_id += 1
+        msg += "{}. 攝影機:{} 無法使用.\n".format(msg_id, cam_id)
+        #exit_app(poweroff=False)
+
+    if(len(msg)>0):
+        msg = msg + "\n 環境檢查有問題, 您要繼續執行嗎?\n    (程式有可能會失敗無法執行)"
+
+    if(ynbox(msg, "環境檢查") is False):
         exit_app(poweroff=False)
 
     return (send_status, gpsDevice.gpsStatus, CAMERA.working())
@@ -415,10 +431,10 @@ if __name__ == '__main__':
     
     CAMERA = webCam(id=cam_id, videofile=simulate, size=webcam_size)
     
-    if(CAMERA.working() is False):
-        print("webcam cannot work.")
-        appStatus = False
-        sys.exit()
+    #if(CAMERA.working() is False):
+    #    print("webcam cannot work.")
+    #    appStatus = False
+    #    sys.exit()
 
     
     defect_file = new_log_filename()

@@ -171,16 +171,21 @@ class webCam:
         self.total_frames = 0
         self.last_frames = 0
         self.fps = 0
+        self.device = True
 
         if(len(videofile)>3):
             self.cam = cv2.VideoCapture(videofile)
             self.playvideo = True
         else:
-            self.cam = cv2.VideoCapture(0+id)
-            #self.cam = cv2.VideoCapture(cv2.CAP_DSHOW+id)
-            self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, size[0])
-            self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, size[1])
-            self.playvideo = False
+            try:
+                self.cam = cv2.VideoCapture(0+id)
+                #self.cam = cv2.VideoCapture(cv2.CAP_DSHOW+id)
+                self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, size[0])
+                self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, size[1])
+                self.playvideo = False
+            except:
+                self.device = False
+                pass
 
     def fps_count(self, seconds_fps=10):
         fps = self.fps
@@ -196,12 +201,22 @@ class webCam:
 
     def working(self):
         webCam = self.cam
-        if(webCam.isOpened() is True):
+
+        try:
+            test_cam = webCam.isOpened()
+        except:
+            test_cam = False
+            pass
+
+        if(test_cam is True):
+            self.device = True
             return True
         else:
             if(self.playvideo is True):
+                self.device = True
                 return True
             else:
+                self.device = False
                 return False
 
     def camRealSize(self):

@@ -432,20 +432,15 @@ if __name__ == '__main__':
     #upload_img(interval_gps_upload, img_waiting_path, img_uploaded_path,(upload_host, upload_port, recv_bit, upload_interval))
     
     #print("Upload img status:", proc_upload)
+    
+    
+    #defect_file = new_log_filename()
+    #logDefects = recordDefects(os.path.join(log_folder, defect_file), defect_count)
+    #f = open(defect_info_write, "a")  # for web
+
     gpsDevice = GPS(comport=comPort, portrate=baudRate, test=False)
     last_gps_logging = time.time()
-    
     CAMERA = webCam(id=cam_id, videofile=simulate, size=webcam_size)
-    
-    #if(CAMERA.working() is False):
-    #    print("webcam cannot work.")
-    #    appStatus = False
-    #    sys.exit()
-
-    
-    defect_file = new_log_filename()
-    logDefects = recordDefects(os.path.join(log_folder, defect_file), defect_count)
-    #f = open(defect_info_write, "a")  # for web
 
     last_long, last_lati = 00, 0.0
     count_waiting, count_upload = 0, 0
@@ -457,11 +452,25 @@ if __name__ == '__main__':
         print("ans=", ans[0])
         chk_env_actions(ans[0])
         print("ans=", ans[0])
-        while ans[0] == '1':
+        while ans[0] == '1' and len(msg)>0:
+            gpsDevice = GPS(comport=comPort, portrate=baudRate, test=False)
+            last_gps_logging = time.time()
+            try:
+                CAMERA.release()
+                CAMERA = webCam(id=cam_id, videofile=simulate, size=webcam_size)
+            except:
+                pass
+
             (s_upload, s_gps, s_cam, msg) = check_env((upload_host, \
                 upload_port, recv_bit, upload_interval))
-            ans = choicebox(msg, title='環境檢查', choices=choices)
-            chk_env_actions(ans[0])
+            if(len(msg)>0):
+                ans = choicebox(msg, title='環境檢查', choices=choices)
+                chk_env_actions(ans[0])
+
+    defect_file = new_log_filename()
+    logDefects = recordDefects(os.path.join(log_folder, defect_file), defect_count)
+    #f = open(defect_info_write, "a")  # for web
+
 
     while appStatus:
         gpsDevice.updateGPS()

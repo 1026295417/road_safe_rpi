@@ -270,8 +270,8 @@ def upload_img(interval_gps, waiting_path, uploaded_path, conn_data):
     
         if(time.time() - gps_upload_time > interval_gps_upload ):
             gps_upload_time = time.time()
-            if(os.path.isfile("gps_tracking.txt")):
-                fgps = open("gps_tracking.txt", "r")
+            if(os.path.isfile(car_id+"_gps_tracking.txt")):
+                fgps = open(car_id+"_gps_tracking.txt", "r")
                 gps_line = fgps.readline()
                 fgps.close()
                 
@@ -468,7 +468,7 @@ if __name__ == '__main__':
         (gps_status, gps_lati, gps_long, gps_dmy, gps_hms) = gpsDevice.getGMinfo()
         
         if(time.time() - last_gps_logging > interval_gps_upload):
-            f = open("gps_tracking.txt","w")
+            f = open(car_id+"_gps_tracking.txt","w")
             f.write("{},{},{},{},{},{}".format("GPS_TRACKS", car_id, gps_lati, gps_long, gps_dmy, gps_hms))
             f.close()
             last_gps_logging = time.time()

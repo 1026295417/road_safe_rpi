@@ -442,6 +442,9 @@ if __name__ == '__main__':
     last_gps_logging = time.time()
     CAMERA = webCam(id=cam_id, videofile=simulate, size=webcam_size)
 
+    defect_file = new_log_filename()
+    logDefects = recordDefects(os.path.join(log_folder, defect_file), defect_count)
+
     last_long, last_lati = 00, 0.0
     count_waiting, count_upload = 0, 0
     (s_upload, s_gps, s_cam, msg) = check_env((upload_host, \
@@ -467,8 +470,8 @@ if __name__ == '__main__':
                 ans = choicebox(msg, title='環境檢查', choices=choices)
                 chk_env_actions(ans[0])
 
-    defect_file = new_log_filename()
-    logDefects = recordDefects(os.path.join(log_folder, defect_file), defect_count)
+    #defect_file = new_log_filename()
+    #logDefects = recordDefects(os.path.join(log_folder, defect_file), defect_count)
     #f = open(defect_info_write, "a")  # for web
 
 
@@ -504,7 +507,7 @@ if __name__ == '__main__':
                 print("Read count_upload.txt error.")
 
 
-        if(len(simulate)==1 or ((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati))):
+        if(len(simulate)>=1 or ((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati))):
         #if((frameID % interval_detect==0)):
             last_long, last_lati = gps_long, gps_lati
             

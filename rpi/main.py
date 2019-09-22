@@ -63,7 +63,7 @@ defect_info_write = os.path.join(web_path,"defects.log")
 #detect
 interval_detect = cfg.getint("detect", "interval_detect")  #frames
 full_screen = cfg.getboolean("screen", "full_screen")
-same_gps_no_uload = cfg.getboolean("detect", "same_gps_no_uload")
+same_gps_no_upload = cfg.getboolean("detect", "same_gps_no_upload")
 detect_score = cfg.getint("detect", "score")/100
 
 #upload
@@ -525,8 +525,13 @@ if __name__ == '__main__':
             except:
                 print("Read count_upload.txt error.")
 
+        if(last_long==gps_long and last_lati==gps_lati):
+            if(same_gps_no_upload is True):
+                upload_same_img = False
+            else:
+                upload_same_img = True
 
-        if(len(simulate)>=1 or ((frameID % interval_detect==0) and (last_long!=gps_long and last_lati!=gps_lati))):
+        if((frameID % interval_detect==0) and (upload_same_img is True)):
         #if((frameID % interval_detect==0)):
             last_long, last_lati = gps_long, gps_lati
             

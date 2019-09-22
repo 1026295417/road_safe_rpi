@@ -181,6 +181,13 @@ def check_env(conn_data):
         msg += "{}. 攝影機:{} 無法使用.\n".format(msg_id, cam_id)
         #exit_app(poweroff=False)
 
+    if(write_flash_test() is True):
+        print("[READY] Flash disk is ready.")
+    else:
+        print("[FAILED] Flash disk is not writeable.")
+        msg_id += 1
+        msg += "{}. Flash disk is not write-able."
+
     #if(len(msg)>0):
     #    msg = msg + "\n 環境檢查有問題, 您要繼續執行嗎?\n    (程式有可能會失敗無法執行)"
 
@@ -399,6 +406,18 @@ def exit_app(poweroff=False):
         sys.exit(0)
     else:
         call("sudo poweroff", shell=True)
+
+def write_flash_test():
+    test_folder = os.path.join(flash_disk_folder, "test")
+    write = True
+    try:
+        os.makedirs(test_folder)
+        os.rmdir(test_folder)
+    except:
+        write = False
+
+    return write
+
 
 def chk_env_actions(choice):
     if(choice=='3'):

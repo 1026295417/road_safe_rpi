@@ -356,7 +356,7 @@ class GPS:
         return ( txtDay+txtMonth+txtYear, txtHour+txtMinute+txtSecond, \
             "20{}/{}/{} {}:{}:{}".format(txtYear,txtMonth,txtDay,txtHour,txtMinute,txtSecond) )
 
-    def updateGPS(self):
+    def updateGPS(self, unit_gps=5):
         
         data = '$GPRMC,133900.709,V,,,,,,,180319,,,N*49'
         
@@ -397,10 +397,10 @@ class GPS:
                 #float(txtLong[:3]) + float(txtLati[3:])/60
                 lat1 = int(Lati/100)
                 lat2 = (Lati/100 - lat1)*100/60
-                self.gmLati = round(lat1 + lat2, 6)
+                self.gmLati = round(lat1 + lat2, unit_gps)
                 long1 = int(Long/100)
                 long2 = (Long/100 - long1)*100/60
-                self.gmLong = round(long1 + long2,6)
+                self.gmLong = round(long1 + long2,unit_gps)
 
     def getGMinfo(self):
         return (self.hardware, self.gmLati, self.gmLong, self.ddmmyy, self.hhmmss)

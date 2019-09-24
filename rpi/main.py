@@ -55,6 +55,8 @@ interval_seconds_logging = cfg.getint("log", "interval_seconds_logging")
 comPort = cfg.get("gps", "comPort")
 baudRate = cfg.getint("gps", "baudRate")
 interval_gps_upload = cfg.getint("gps", "interval_gps_upload")
+gps_unit_point = cfg.getint("gps", "gps_unit_point")
+
 #web
 web_path = "FLASH\\web"
 defect_info_write = os.path.join(web_path,"defects.log")
@@ -494,7 +496,7 @@ if __name__ == '__main__':
 
 
     while appStatus:
-        gpsDevice.updateGPS()
+        gpsDevice.updateGPS(gps_unit_point)
         (gps_status, gps_lati, gps_long, gps_dmy, gps_hms) = gpsDevice.getGMinfo()
         
         if(time.time() - last_gps_logging > interval_gps_upload):

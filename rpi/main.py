@@ -91,7 +91,7 @@ dmodel = objDetect_ssd(objnames="../models/cfg.road.yolo_tiny.all/obj.names", \
 
 '''
 dmodel = obDetect_yolo(objnames="../models/cfg.road.yolo_tiny.all/obj.names", \
-    weights="../models/cfg.road.yolo_tiny.all/yolov3-tiny_11_classes.weights", \
+    weights="../models/cfg.road.yolo_tiny.all/yolov3-tiny_500000.weights", \
     cfg="../models/cfg.road.yolo_tiny.all/yolov3-tiny.cfg", \
     img_size=reference_size )
 '''
@@ -524,8 +524,9 @@ if __name__ == '__main__':
             except:
                 print("Read count_upload.txt error.")
 
-        upload_same_img = False
+        upload_same_img = same_gps_no_upload
         if(last_long==gps_long and last_lati==gps_lati):
+            print("TEST:", last_lati, last_long, gps_lati, gps_long)
             if(same_gps_no_upload is True):
                 upload_same_img = False
             else:
@@ -533,7 +534,7 @@ if __name__ == '__main__':
 
         if((frameID % interval_detect==0) and (upload_same_img is True)):
         #if((frameID % interval_detect==0)):
-            last_long, last_lati = gps_long, gps_lati
+            #last_long, last_lati = gps_long, gps_lati
             
             #check upload counts
             #if(os.path.isfile("count_upload.txt")):
@@ -589,7 +590,7 @@ if __name__ == '__main__':
         
         
         cv2.imshow(win_name, desktop)
-
+        last_long, last_lati = gps_long, gps_lati
         key = cv2.waitKey(1)
         if(key==113):
             exit_app()

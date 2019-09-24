@@ -55,7 +55,6 @@ interval_seconds_logging = cfg.getint("log", "interval_seconds_logging")
 comPort = cfg.get("gps", "comPort")
 baudRate = cfg.getint("gps", "baudRate")
 interval_gps_upload = cfg.getint("gps", "interval_gps_upload")
-
 #web
 web_path = "FLASH\\web"
 defect_info_write = os.path.join(web_path,"defects.log")
@@ -525,6 +524,7 @@ if __name__ == '__main__':
             except:
                 print("Read count_upload.txt error.")
 
+        upload_same_img = False
         if(last_long==gps_long and last_lati==gps_lati):
             if(same_gps_no_upload is True):
                 upload_same_img = False

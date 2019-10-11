@@ -591,6 +591,8 @@ if __name__ == '__main__':
                 defect_count[class_name[i]] += 1
 
             if(len(nBoxes)>0):
+                last_long, last_lati = gps_long, gps_lati
+
                 img_file_name = new_imgname(gps_status)
                 waiting_path = os.path.join(img_waiting_path, img_file_name)
                 possible_defetct = os.path.join(img_possible_defetct, img_file_name)
@@ -617,7 +619,7 @@ if __name__ == '__main__':
         
         
         cv2.imshow(win_name, desktop)
-        last_long, last_lati = gps_long, gps_lati
+        #last_long, last_lati = gps_long, gps_lati
         key = cv2.waitKey(1)
         if(key==113):
             #cv2.imwrite("desktop_"+str(time.time())+".jpg", desktop)

@@ -22,6 +22,8 @@ import multiprocessing as mp
 from libRoad import SOCKETSEND
 import glob
 import socket
+from math import sin, cos, sqrt, atan2, radians
+
 defect_list = { 'D00': '縱向裂縫輪痕', 'D01': '縱向裂縫施工', 'D10': '橫向裂縫間隔', 'D11': '橫向裂縫施工', \
     'D12': '縱橫裂縫', 'D20': '龜裂', 'D21': '人孔破損', 'D30': '車轍', 'D31': '路面隆起', \
     'D40': '坑洞', 'D41': '人孔高差', 'D42': '薄層剝離', 'D50': '人孔缺失', 'D51': '正常人孔' }
@@ -432,6 +434,27 @@ def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
     exit_app()
 
+def gps_distance(olon1, olat1, olon2, olat2):
+    
+    #approximate radius of earth in km
+    R = 6373.0
+
+    lat1 = radians(olat1)
+    lon1 = radians(olon1)
+    lat2 = radians(olat2)
+    lon2 = radians(olon2)
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    dist = R * c * 1000
+
+    #print("Distance:", dist, ":", olat1, olon1, olat2, olon2)
+    return dist
+
 if __name__ == '__main__':
     setEnv()
     signal.signal(signal.SIGINT, signal_handler)
@@ -527,15 +550,17 @@ if __name__ == '__main__':
                 print("Read count_upload.txt error.")
 
         upload_same_img = same_gps_no_upload
-        if(last_long==gps_long and last_lati==gps_lati):
-            print("TEST:", last_lati, last_long, gps_lati, gps_long)
+        distance_moved = gps_distance(last_long, last_lati, gps_long, gps_lati)
+        #if(last_long==gps_long and last_lati==gps_lati):
+        if(distance_moved<0.1):
             if(same_gps_no_upload is True):
                 upload_same_img = False
             else:
                 upload_same_img = True
 
-        if((frameID % interval_detect==0) and (upload_same_img is True)):
+        #if((frameID % interval_detect==0) and (upload_same_img is True)):
         #if((frameID % interval_detect==0)):
+        if(upload_same_img is True):
             #last_long, last_lati = gps_long, gps_lati
             
             #check upload counts
@@ -592,6 +617,7 @@ if __name__ == '__main__':
         
         
         cv2.imshow(win_name, desktop)
+        cv2.imwrite("desktop_"+str(time.time()+".jpg", desktop)
         last_long, last_lati = gps_long, gps_lati
         key = cv2.waitKey(1)
         if(key==113):

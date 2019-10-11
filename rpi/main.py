@@ -58,6 +58,7 @@ comPort = cfg.get("gps", "comPort")
 baudRate = cfg.getint("gps", "baudRate")
 interval_gps_upload = cfg.getint("gps", "interval_gps_upload")
 gps_unit_point = cfg.getint("gps", "gps_unit_point")
+th_distance_upload = cfg.getint("gps", "th_distance_upload") / 100
 
 #web
 web_path = "FLASH\\web"
@@ -552,15 +553,16 @@ if __name__ == '__main__':
         upload_same_img = same_gps_no_upload
         distance_moved = gps_distance(last_long, last_lati, gps_long, gps_lati)
         #if(last_long==gps_long and last_lati==gps_lati):
-        if(distance_moved<0.1):
+        print(last_long, last_lati, gps_long, gps_lati)
+        print(distance_moved, th_distance_upload)
+        if(distance_moved<th_distance_upload):
             if(same_gps_no_upload is True):
                 upload_same_img = False
             else:
                 upload_same_img = True
-
         #if((frameID % interval_detect==0) and (upload_same_img is True)):
         #if((frameID % interval_detect==0)):
-        if(upload_same_img is True):
+        if(upload_same_img is True or (distance_moved>th_distance_upload)):
             #last_long, last_lati = gps_long, gps_lati
             
             #check upload counts

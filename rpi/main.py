@@ -189,7 +189,7 @@ def check_env(conn_data):
     else:
         print("[FAILED] Flash disk is not writeable.")
         msg_id += 1
-        msg += "{}. Flash disk is not write-able."
+        msg += "{}. 隨身碟{}無法寫入.".format(msg_id, flash_disk_folder)
 
     #if(len(msg)>0):
     #    msg = msg + "\n 環境檢查有問題, 您要繼續執行嗎?\n    (程式有可能會失敗無法執行)"
@@ -617,10 +617,10 @@ if __name__ == '__main__':
         
         
         cv2.imshow(win_name, desktop)
-        cv2.imwrite("desktop_"+str(time.time()+".jpg", desktop)
         last_long, last_lati = gps_long, gps_lati
         key = cv2.waitKey(1)
         if(key==113):
+            #cv2.imwrite("desktop_"+str(time.time())+".jpg", desktop)
             exit_app()
 
         #print("FPS:", CAMERA.fps_count(10), "GPS:", gps_status, gps_lati, gps_long, gps_dmy, gps_hms)

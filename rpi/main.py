@@ -553,8 +553,8 @@ if __name__ == '__main__':
         upload_same_img = same_gps_no_upload
         distance_moved = gps_distance(last_long, last_lati, gps_long, gps_lati)
         #if(last_long==gps_long and last_lati==gps_lati):
-        print(last_long, last_lati, gps_long, gps_lati)
-        print(distance_moved, th_distance_upload)
+        #print(last_long, last_lati, gps_long, gps_lati)
+        #print(distance_moved, th_distance_upload)
         if(distance_moved<th_distance_upload):
             if(same_gps_no_upload is True):
                 upload_same_img = False
